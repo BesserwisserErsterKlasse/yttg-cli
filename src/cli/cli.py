@@ -23,10 +23,14 @@ class YttgCli:
         """Start the CLI."""
 
         while True:
-            request: YttgRequest = parse_command(command=input('user> '))
-            await self.__client.send(request)
-            response: YttgResponse = await self.__client.receive()
-            await self.__callback(response)
+            try:
+                request: YttgRequest = parse_command(command=input('user> '))
+            except Exception as exception:
+                print(exception)
+            else:
+                await self.__client.send(request)
+                response: YttgResponse = await self.__client.receive()
+                await self.__callback(response)
 
     def __init__(self, client: YttgClient, callback: CliCallback = aprint) -> None:
         self.__client = client
