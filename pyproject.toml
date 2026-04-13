@@ -1,0 +1,87 @@
+[project]
+name = "yttg-cli"
+dynamic = ["version"]
+description = "CLI for yttg utility"
+authors = [{ name = "Emelianov Artem", email = "polyfoam3758@proton.me" }]
+dependencies = ["pydantic-settings", "cattrs"]
+requires-python = ">=3.14"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+
+[project.optional-dependencies]
+dev = ["isort", "black", "flake8-pyproject", "mypy", "pre-commit"]
+
+[build-system]
+requires = ["setuptools>=77.0", "setuptools-scm", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_scheme = "only-version"
+local_scheme = "no-local-version"
+tag_regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+)$"
+fallback_version = "0.0.0"
+
+[tool.isort]
+py_version = 314
+skip_gitignore = true
+line_length = 88
+multi_line_output = 3
+use_parentheses = true
+atomic = true
+lines_before_imports = 0
+combine_star = true
+include_trailing_comma = true
+from_first = true
+verbose = true
+force_alphabetical_sort_within_sections = true
+profile = "black"
+honor_noqa = true
+src_paths = ["src"]
+remove_redundant_aliases = true
+float_to_top = true
+only_modified = true
+star_first = true
+
+[tool.black]
+line-length = 88
+skip-string-normalization = true
+
+[tool.flake8]
+count = true
+max-line-length = 88
+statistics = true
+max-complexity = 16
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+python_version = "3.14"
+files = ["src"]
+mypy_path = ["src"]
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+strict_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_return_any = true
+warn_unreachable = true
+allow_untyped_globals = false
+allow_redefinition = false
+extra_checks = true
+implicit_reexport = true
+strict_equality = true
+strict_bytes = true
+show_error_context = true
+show_column_numbers = true
+show_error_code_links = true
+pretty = true
+error_summary = true
+warn_incomplete_stub = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
