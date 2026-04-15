@@ -1,4 +1,5 @@
 from asyncio import open_connection, StreamReader, StreamWriter
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from hashlib import sha256
 from hmac import compare_digest, new
@@ -17,7 +18,7 @@ from client.crypto import (
     KeyMaterial,
     ServerHello,
 )
-from client.types import YttgRequest, YttgResponse
+from client.types import BackgroundResponse, YttgRequest, YttgResponse
 
 # isort: off
 from env import env
@@ -41,6 +42,14 @@ match env.crypto.ml_kem:
 # isort: on
 
 
+type BackgroundHandler[Response: BackgroundResponse] = Callable[
+    [Response], Awaitable[None]
+]
+type BackgroundHandlerDecorator[Response: BackgroundResponse] = Callable[
+    [BackgroundHandler[Response]], BackgroundHandler[Response]
+]
+
+
 PAYLOAD_SLICE: Final[slice] = slice(None, -32, None)
 MAC_SLICE: Final[slice] = slice(-32, None, None)
 SEQUENCE_NUMBER_SLICE: Final[slice] = slice(None, 8, None)
@@ -58,6 +67,7 @@ class YttgClient:
     __keys: KeyMaterial
     __send_sequence_number: int
     __receive_sequence_number: int
+    __background_handlers: dict[str, BackgroundHandler[Any]]
 
     def __init__(self, host: str, port: int, header_size: int, psk: bytes) -> None:
         self.__host = host
@@ -66,6 +76,7 @@ class YttgClient:
         self.__pre_shared_key = psk
         self.__send_sequence_number = 0
         self.__receive_sequence_number = 0
+        self.__background_handlers = {}
 
     async def start(self) -> None:
         """Establish qost-quantum e2e protected connection."""
@@ -130,23 +141,45 @@ class YttgClient:
     async def receive(self) -> YttgResponse:
         """Wait for a response from the server."""
 
-        header: bytes = await self.__reader.readexactly(self.__header_size)
-        raw: bytes = await self.__reader.readexactly(int(header))
-        payload, received_mac = raw[PAYLOAD_SLICE], raw[MAC_SLICE]
-        expected_mac: bytes = new(self.__keys.server_mac_key, payload, sha256).digest()
-        if not compare_digest(expected_mac, received_mac):
-            raise ValueError('Invalid MAC')
-        sequence_number: int = unpack('>Q', payload[SEQUENCE_NUMBER_SLICE])[0]
-        if sequence_number != self.__receive_sequence_number:
-            raise ValueError(f'Wrong sequence number: expected {(
-                    self.__receive_sequence_number
-                )}, got {sequence_number}')
-        plaintext: bytes = aes256_ctr_decrypt(
-            key=self.__keys.server_encryption_key,
-            sequence_number=sequence_number,
-            ciphertext=payload[CIPHERTEXT_SLICE],
-        )
-        self.__receive_sequence_number += 1
-        body: dict[str, Any] = loads(plaintext)
-        factory_name: str = body.pop('response-kind')
-        return converter.structure(body, YttgResponse.get_factory(factory_name))
+        while True:
+            header: bytes = await self.__reader.readexactly(self.__header_size)
+            raw: bytes = await self.__reader.readexactly(int(header))
+            payload, received_mac = raw[PAYLOAD_SLICE], raw[MAC_SLICE]
+            expected_mac: bytes = new(
+                self.__keys.server_mac_key, payload, sha256
+            ).digest()
+            if not compare_digest(expected_mac, received_mac):
+                raise ValueError('Invalid MAC')
+            sequence_number: int = unpack('>Q', payload[SEQUENCE_NUMBER_SLICE])[0]
+            if sequence_number != self.__receive_sequence_number:
+                raise ValueError(f'Wrong sequence number: expected {(
+                        self.__receive_sequence_number
+                    )}, got {sequence_number}')
+            plaintext: bytes = aes256_ctr_decrypt(
+                key=self.__keys.server_encryption_key,
+                sequence_number=sequence_number,
+                ciphertext=payload[CIPHERTEXT_SLICE],
+            )
+            self.__receive_sequence_number += 1
+            body: dict[str, Any] = loads(plaintext)
+            factory: type[YttgResponse] = YttgResponse.get_factory(
+                name=body.pop('response-kind')
+            )
+            response: YttgResponse = converter.structure(body, factory)
+            if response.kind in self.__background_handlers:
+                await self.__background_handlers[response.kind](response)
+            else:
+                return response
+
+    def on_background_response[Response: BackgroundResponse](
+        self, response_type: type[Response]
+    ) -> BackgroundHandlerDecorator[Response]:
+        """Register a new background handler."""
+
+        def decorator(
+            handler: BackgroundHandler[Response],
+        ) -> BackgroundHandler[Response]:
+            self.__background_handlers[response_type.kind] = handler
+            return handler
+
+        return decorator

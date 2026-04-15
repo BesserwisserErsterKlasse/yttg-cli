@@ -3,7 +3,7 @@ name = "yttg-cli"
 dynamic = ["version"]
 description = "CLI for yttg utility"
 authors = [{ name = "Emelianov Artem", email = "polyfoam3758@proton.me" }]
-dependencies = ["pydantic-settings", "cattrs", "pyaes", "pqcrypto"]
+dependencies = ["pydantic-settings", "cattrs", "pyaes", "pqcrypto", "rich"]
 requires-python = ">=3.14"
 readme = "README.md"
 license = "GPL-3.0-or-later"

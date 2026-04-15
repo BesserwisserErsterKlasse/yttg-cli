@@ -25,6 +25,7 @@ class YttgResponse(ABC):
     __response_map: ClassVar[dict[str, type[YttgResponse]]] = {}
 
     def __init_subclass__(cls, constructor: bool = False) -> None:
+        cls.kind = to_dash_case(cls.__name__)
         if constructor:
             cls.__response_map[to_dash_case(cls.__name__)] = cls
 
