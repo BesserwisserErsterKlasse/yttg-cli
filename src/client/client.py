@@ -7,11 +7,6 @@ from os import urandom
 from struct import pack, unpack
 from typing import Any, Final
 
-from pqcrypto.kem.ml_kem_1024 import (  # type: ignore[import-untyped]
-    decrypt,
-    generate_keypair,
-)
-
 from client.converter import converter
 from client.crypto import (
     aes256_ctr_decrypt,
@@ -23,6 +18,28 @@ from client.crypto import (
     ServerHello,
 )
 from client.types import YttgRequest, YttgResponse
+
+# isort: off
+from env import env
+
+match env.crypto.ml_kem:
+    case 512:
+        from pqcrypto.kem.ml_kem_512 import (  # type: ignore[import-untyped]
+            decrypt,
+            generate_keypair,
+        )
+    case 768:
+        from pqcrypto.kem.ml_kem_768 import (  # type: ignore[import-untyped]
+            decrypt,
+            generate_keypair,
+        )
+    case 1024:
+        from pqcrypto.kem.ml_kem_1024 import (  # type: ignore[import-untyped]
+            decrypt,
+            generate_keypair,
+        )
+# isort: on
+
 
 PAYLOAD_SLICE: Final[slice] = slice(None, -32, None)
 MAC_SLICE: Final[slice] = slice(-32, None, None)
