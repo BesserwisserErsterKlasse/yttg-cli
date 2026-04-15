@@ -44,6 +44,24 @@ Install the dependencies
 pip install -e .
 ```
 
+## Run
+
+Create `.env` file in the project's root and define the `CRYPTO__PRE_SHARED_SECRET` environment variable
+
+```env
+CRYPTO__PRE_SHARED_SECRET="your-random-shared-secret"
+```
+
+This value should be a securely generated random string. It is used as a pre-shared secret for cryptographic operations.
+
+For example, you can use this command to generate it
+
+```shell
+openssl rand -hex 32
+```
+
+**Important:** The same secret must be configured on both the client and the server.
+
 Run the `main.py` file
 
 ```shell
