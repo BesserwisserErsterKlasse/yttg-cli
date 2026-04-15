@@ -17,3 +17,15 @@ def uuid_structure_hook(value: object, _: type[UUID]) -> UUID:
 @converter.register_unstructure_hook
 def uuid_unstructure_uhook(value: UUID) -> str:
     return str(value)
+
+
+@converter.register_structure_hook
+def bytes_structure_hook(value: object, _: type[bytes]) -> bytes:
+    if isinstance(value, str):
+        return bytes.fromhex(value)
+    raise ValueError(f'Cannot structure bytes from {value!r}')
+
+
+@converter.register_unstructure_hook
+def bytes_unstructure_uhook(value: bytes) -> str:
+    return value.hex()
