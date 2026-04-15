@@ -20,6 +20,16 @@ class VideoInfo:
     views: str | None
     """Approximate number of views, e.g. `'47M'`"""
 
+    def __str__(self) -> str:
+        return f'{self.title}\n\t' + '\n\t'.join(
+            (
+                f'Views: {self.views}',
+                f'Duration: {self.duration} seconds',
+                f'Link: {self.link}',
+                f'Thumbnail: {self.thumbnail_link}',
+            )
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class SearchResponse(YttgResponse, constructor=True):
@@ -28,3 +38,6 @@ class SearchResponse(YttgResponse, constructor=True):
 
     videos: list[VideoInfo]
     """YouTube videos matching the query."""
+
+    def __repr__(self) -> str:
+        return f'Offset: {self.offset}\n{'\n'.join(map(str, self.videos))}'

@@ -8,3 +8,6 @@ from client.types.response.base import YttgResponse
 class ThumbnailResponse(YttgResponse, constructor=True):
     savepath: Path
     """Path to the saved thumbnail."""
+
+    def __repr__(self) -> str:
+        return f'Thumbnail saved to {self.savepath}'
