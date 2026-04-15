@@ -15,6 +15,7 @@ class StreamInfoRequest(
     ProviderRequestMixin,
     YttgRequest,
     command=YttgCommand.GET_STREAMS,
+    argument_order=['link', 'provider'],
 ):
     pass
 
@@ -25,15 +26,16 @@ class DownloadRequest(
     ProviderRequestMixin,
     YttgRequest,
     command=YttgCommand.DOWNLOAD,
+    argument_order=['link', 'stream', 'language', 'provider', 'folder', 'name'],
 ):
     stream: Stream
     """YouTube stream to download."""
 
-    language: str
-    """Preffered language of the audio."""
-
     folder: Path
     """Folder where to save the file."""
+
+    language: str | None = None
+    """Preffered language of the audio."""
 
     name: str = '{title}'
     """Local name of the media file."""

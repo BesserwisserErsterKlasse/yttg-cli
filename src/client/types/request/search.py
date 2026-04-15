@@ -5,7 +5,11 @@ from client.types.request.enums import YttgCommand
 
 
 @dataclass(frozen=True, slots=True)
-class SearchRequest(YttgRequest, command=YttgCommand.SEARCH):
+class SearchRequest(
+    YttgRequest,
+    command=YttgCommand.SEARCH,
+    argument_order=['query', 'offset'],
+):
     query: str
     """Search term used to retrieve matching YouTube videos."""
 

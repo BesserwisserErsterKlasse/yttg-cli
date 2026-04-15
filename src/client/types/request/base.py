@@ -9,6 +9,9 @@ from client.types.request.enums import YttgCommand
 
 @dataclass(frozen=True, slots=True)
 class YttgRequest:
+    argument_order: ClassVar[list[str]]
+    """Order of positional arguments of the corresponding command."""
+
     command: ClassVar[YttgCommand | None] = None
     """Command the request corresponds to."""
 
@@ -22,10 +25,16 @@ class YttgRequest:
 
     __command_map: ClassVar[dict[YttgCommand, type[YttgRequest]]] = {}
 
-    def __init_subclass__(cls, command: YttgCommand | None = None) -> None:
+    def __init_subclass__(
+        cls,
+        command: YttgCommand | None = None,
+        argument_order: list[str] | None = None,
+    ) -> None:
         if command is not None:
             cls.command = command
             cls.__command_map[command] = cls
+        if argument_order is not None:
+            cls.argument_order = argument_order
 
 
 @dataclass(frozen=True)

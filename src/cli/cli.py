@@ -25,6 +25,8 @@ class YttgCli:
         while True:
             try:
                 request: YttgRequest = parse_command(command=input('user> '))
+            except ValueError as exception:
+                print(exception.args[0])
             except Exception as exception:
                 print(exception)
             else:
