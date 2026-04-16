@@ -6,7 +6,7 @@
 
 ## Installation
 
-First, clone the repo to the target machine
+First, clone the repo to your computer
 
 ```shell
 git clone https://github.com/BesserwisserErsterKlasse/yttg-cli
